@@ -6,7 +6,7 @@ SDIR=src
 
 LIBS=-lm
 
-_OBJ = main.o sha1.o base64.o
+_OBJ = main.o sha1.o base64.o handshake.o util.o net.o ws.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
