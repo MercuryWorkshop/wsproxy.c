@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -fPIC
+CFLAGS=-O3 -march=znver1
 
 ODIR=obj
 SDIR=src
@@ -13,10 +13,10 @@ OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 $(ODIR)/%.o: $(SDIR)/%.c 
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-webtcp: $(OBJ)
+wsproxy: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o webtcp
+	rm -f $(ODIR)/*.o wsproxy

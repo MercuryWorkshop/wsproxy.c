@@ -2,6 +2,7 @@
 #include <endian.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -36,6 +37,7 @@ char *ws_send(char *payload, uint16_t pl_len) {
 }
 
 
+#include <immintrin.h>
 int ws_recv() {
   unsigned char frame[2];
   memset(frame, 0, 2);
@@ -47,8 +49,8 @@ int ws_recv() {
 
   unsigned long length = frame[1] & 127;
   unsigned char masked = frame[1] & 128;
-  unsigned char mask[4];
-  memset(mask, 0, 4);
+
+  uint32_t mask = 0;
 
   if (length == 126) {
     unsigned short len = 0;
@@ -63,18 +65,29 @@ int ws_recv() {
   }
 
   if (masked == 128) {
-    read(fd, mask, sizeof mask);
+    read(fd, &mask, sizeof mask);
   }
 
-  char payload[1310000];
-  memset(payload, 0, sizeof payload);
+  char *payload = malloc(length*2);
+  memset(payload, 0, length*2);
   read(fd, payload, length);
+
+
 
   // goofy ahh protocol
   if (masked == 128) {
-    for (unsigned long i = 0; i < length; i++) {
-      payload[i] ^= mask[i % 4];
+    for (unsigned long i = 0; i < length; i+=4) {
+      *(uint32_t*)&payload[i] ^= mask;
     }
+
+    
+    // __m256i mask_vec = _mm256_set1_epi32(mask);
+    // for (size_t i = 0; i < length; i += 32) {
+    //     // Load 32 bytes of payload data into a 256-bit vector, xor it, and store it back 
+    //     __m256i data_vec = _mm256_loadu_si256((__m256i *)(payload + i));
+    //     __m256i decoded_vec = _mm256_xor_si256(data_vec, mask_vec);
+    //     _mm256_storeu_si256((__m256i *)(payload + i), decoded_vec);
+    // }
   }
 
   write(tcpfd, payload, length);
